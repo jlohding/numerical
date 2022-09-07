@@ -5,7 +5,7 @@ from matrix_properties import MatrixClassifier
 
 import warnings
 
-def jacobi(A: Matrix, b: Vector, max_iters=50):
+def jacobi(A: Matrix, b: Vector, max_iters=50) -> Vector:
     '''Faster Jacobi fixed-point iteration method by decomposing A into (D + L + U), the sum of a diagonal, tril and triu matrix
     
     Idea/Algorithm:
@@ -53,7 +53,7 @@ def jacobi(A: Matrix, b: Vector, max_iters=50):
         x = new_x
     return x
 
-def naive_jacobi(A: Matrix, b: Vector, max_iters=50):
+def naive_jacobi(A: Matrix, b: Vector, max_iters=50) -> Vector:
     '''Solves Ax = b via Jacobi Fixed Point Iteration (FPI) method
 
     Idea/Algorithm:
@@ -65,7 +65,8 @@ def naive_jacobi(A: Matrix, b: Vector, max_iters=50):
 
     Convergence conditions:
         If A is strictly diagonally dominant, then convergence to the unique solution is guaranteed
-        Otherwise, the Jacobi method may diverge and no solution will be found
+            The proof is by showing that the spectral radius p((D^-1)(L+U)) < 1 
+       Otherwise, the Jacobi method may diverge and no solution will be found
 
     A: Matrix
         Linear system with n unknowns and at least n rows: this matrix must be square
