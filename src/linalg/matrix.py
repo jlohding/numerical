@@ -80,6 +80,15 @@ class Matrix:
                 tri.set(i,j, self.get(i,j))
         return tri
 
+    def diagonal(self) -> 'Matrix':
+        '''Returns the diagonal of the matrix
+        '''
+        rows, columns = self.shape
+        diag = Matrix((rows, columns))
+        for i in range(min(rows, columns)):
+            diag.set(i,i, self.get(i,i))
+        return diag
+
     def swap_rows(self, i: int, j: int) -> 'Matrix':
         '''Swaps rows i and j
         
