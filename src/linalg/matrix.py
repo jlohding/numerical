@@ -59,7 +59,7 @@ class Matrix:
         '''
         self.matrix[i].set(j, val)
         return self
-
+    
     def triu(self) -> 'Matrix':
         '''Returns the upper triangle of the matrix
         '''
@@ -147,6 +147,75 @@ class Matrix:
                     res.set(r,c, value)
         return res
 
+    def submatrix(self, rows: Tuple[int,int] or int, cols: Tuple[int,int] or int) -> 'Matrix' or 'Vector' or int:
+        '''Returns submatrix A_(rows[0] to rows[1], cols[0] to cols[1])
+        
+        rows: Tuple[int, int] or int
+            Left and right bound [a, b) for submatrix rows
+            If type(rows) == int, select only one single row        
+
+        cols: Tuple[int, int]
+            Left and right bound [a, b) for submatrix cols 
+            If type(cols) == int, select only one single col        
+
+        return: Matrix or Vector or int
+            Returns new object of type depending on shape of submatrix
+        '''
+        if isinstance(rows, int) and isinstance(cols, int):
+            # single entry
+            return self.get(rows, cols)
+
+        elif isinstance(rows, int):
+            return Vector([self.get(rows, c) for c in range(*cols)])
+
+        elif isinstance(cols, int):
+            return Vector([self.get(r, cols) for r in range(*rows)])
+        
+        else:
+            vecs = [Vector([self.get(r,c) for c in range(*cols)]) for r in range(*rows)]
+            return Matrix(vecs)
+
+    def set_submatrix(self, rows: Tuple[int, int] or int, cols: Tuple[int, int] or int, submatrix: 'Matrix') -> 'Matrix':
+        '''Sets a matrix's values into an equally-shaped submatrix at specified rows/cols
+        For example: A = [[1,0,0],[0,1,0],[0,0,1]], B = [[5,5],[5,5]]
+        A.set_submatrix((0,2),(0,2), B) returns Matrix([5,5,0],[5,5,0],[0,0,1])
+        
+        rows: Tuple[int, int] or int
+            Left and right bound [a, b) for submatrix rows
+            If type(rows) == int, select only one single row        
+
+        cols: Tuple[int, int]
+            Left and right bound [a, b) for submatrix cols 
+            If type(cols) == int, select only one single col        
+
+        submatrix: Matrix
+            submatrix.shape must equal (rows[1]-rows[0], cols[1]-cols[0])
+
+        return: Matrix
+            Returns reference to self
+        '''
+        if isinstance(rows, int) and isinstance(cols, int):
+            # single entry
+            self.set(rows, cols, submatrix.get(rows,cols))
+
+        elif isinstance(rows, int):
+            for i, c in enumerate(range(*cols)):
+                self.set(rows, c, submatrix.get(0,i))
+
+        elif isinstance(cols, int):
+            for i, r in enumerate(range(*rows)):
+                self.set(r, cols, submatrix.get(i,0))
+        
+        else:
+            if submatrix.shape != (rows[1]-rows[0], cols[1]-cols[0]):
+                raise Exception(f"Submatrix shape {submatrix.shape} does not align with target")
+
+            for i, r in enumerate(range(*rows)):
+                for j, c in enumerate(range(*cols)):
+                    self.set(r,c, submatrix.get(i,j))
+
+        return self
+
     def to_vector(self) -> Vector:
         '''Converts to 1-dimensional column vector
         
@@ -181,6 +250,48 @@ class Matrix:
         else:
             return self.to_list() == __o.to_list()
 
+    def __add__(self, __o: 'Matrix') -> 'Matrix':
+        '''Override __add__ for matrix elementwise addition
+        '''
+        if not isinstance(__o, (Vector,Matrix)):
+            raise Exception("Cannot add Matrix with non-Vector or non-Matrix")
+        
+        if isinstance(__o, Vector):
+            # convert to Matrix
+            __o = Matrix(__o)
+
+        if self.shape != __o.shape:
+            raise Exception("Cannot add matrices of different length")
+        else:
+            res = Matrix(self.shape)
+            for i in range(self.shape[0]):
+                for j in range(self.shape[1]):
+                    a = self.get(i,j)
+                    b = __o.get(i,j)
+                    res.set(i,j, a+b)
+            return res 
+
+    def __sub__(self, __o: 'Vector') -> 'Vector':
+        '''Override __sub__ for matrix elementwise subtraction
+        '''
+        if not isinstance(__o, (Vector,Matrix)):
+            raise Exception("Cannot add Matrix with non-Vector or non-Matrix")
+        
+        if isinstance(__o, Vector):
+            # convert to Matrix
+            __o = Matrix(__o)
+
+        if self.shape != __o.shape:
+            raise Exception("Cannot add matrices of different length")
+        else:
+            res = Matrix(self.shape)
+            for i in range(self.shape[0]):
+                for j in range(self.shape[1]):
+                    a = self.get(i,j)
+                    b = __o.get(i,j)
+                    res.set(i,j, a-b)
+            return res 
+
     def __mul__(self, k: float) -> 'Matrix':
         '''Override __mul__ for scalar multiplication
         '''
@@ -193,3 +304,12 @@ class Matrix:
         '''Override __rmul__ for scalar multiplication (commutative)
         '''
         return self.__mul__(k)
+
+if __name__ == "__main__":
+    mat = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+
+    submat = mat.submatrix((0,3),1)
+
+    print(submat, "\n")
+    mat.set_submatrix((0,3), 1, submat)
+    print(mat)
